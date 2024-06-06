@@ -1,0 +1,52 @@
+version: '3'
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - localprom
+    ports:
+      - 9090:9090
+
+  node-exporter:
+    image: prom/node-exporter
+    networks:
+      - localprom
+    ports:
+      - 9100:9100
+
+  postgres:
+    container_name: database
+    image: postgres:latest
+    networks:
+      - localprom
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+
+  backend:
+    build: .
+    networks:
+      - localprom
+    ports:
+      - 3002:3002
+      - 3001:3001
+    depends_on: 
+     - postgres
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    networks:
+      - localprom
+
+
+networks:
+  localprom:
+    driver: bridge
